@@ -1,6 +1,6 @@
 # ActionsOnGoogleIntro
 
-Cloud functions to be used in the CasterIO Actions on Google introduction course.
+Cloud function example to be used in the CasterIO Actions on Google introduction course.
 
 The function provides 3 examples of how to reply to an Intent.
 
