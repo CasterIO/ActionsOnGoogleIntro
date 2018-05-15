@@ -7,7 +7,13 @@ const {
     Button,
     SimpleResponse,
     BrowseCarousel,
-    BrowseCarouselItem
+    BrowseCarouselItem,
+    Permission,
+    Confirmation,
+    MediaObject,
+    Image,
+    Suggestions,
+    NewSurface
 } = require('actions-on-google');
 
 const app = dialogflow({
@@ -17,19 +23,18 @@ const app = dialogflow({
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
 
 app.intent('HeroInfo', (conv) => {
-    showHeroInfo(conv);
+    showHeroInfo(conv, conv.parameters['hero']);
 });
 
 app.intent('Start - yes - Hero response', (conv) => {
-    showHeroInfo(conv);
+    showHeroInfo(conv, conv.parameters['hero']);
 });
 
-function showHeroInfo(conv) {
+function showHeroInfo(conv, heroSelected) {
     console.log("Starting hero intent v1.3");
     console.log("Contexts: ", conv.contexts);
     console.log("Parameters: ", conv.parameters);
 
-    let heroSelected = conv.parameters['Hero'];
     console.log("heroSelected: ", heroSelected);
 
     switch (heroSelected) {
@@ -110,3 +115,91 @@ function showHeroInfo(conv) {
         conv.ask("Hero not found");
     }
 }
+
+app.intent("Ask users Name", (conv) => {
+    const options = {
+        context: 'To address you by name',
+        permissions: ['NAME'],
+    };
+    conv.ask(new Permission(options));
+});
+
+app.intent('Permission confirmation', (conv, input, granted) => {
+    if (granted) {
+        const name = conv.user.name;
+        conv.ask(`Hi ${name.display}, thank you for providing your name`);
+    } else {
+        conv.ask('Ok, you can provide your name another time :(');
+    }
+});
+
+app.intent("Save Favorite hero", function (conv, params) {
+    const hero = params['hero'];
+    conv.data.hero = hero;
+    conv.ask(new Confirmation(`Should I remember that your favorite hero is ${hero}?`))
+});
+
+app.intent("remember_hero", function (conv, params, confirmation) {
+        if (confirmation) {
+            const hero = conv.data.hero;
+            conv.user.storage.hero = hero;
+            conv.close(`Amazing, your hero ${hero} has been saved, see you later`);
+        } else {
+            conv.close('Ok :( goodbye');
+        }
+    }
+);
+
+app.intent("Read Favorite hero", function (conv) {
+    conv.ask(`Your favorite hero is ${conv.user.storage.hero}`);
+});
+
+app.intent("Default Welcome Intent", function (conv) {
+    if (conv.user.last.seen) {
+        const hero = conv.user.storage.hero;
+        if (hero) {
+            conv.ask(`Welcome back, your favorite hero is ${hero}`);
+        } else {
+            conv.ask('Welcome back');
+        }
+    } else {
+        conv.ask('Welcome to the super hero game');
+    }
+});
+
+app.intent("Play music", function (conv) {
+    conv.ask("Here is a music");
+    conv.ask(new MediaObject({
+        name: 'Drums sample',
+        url: 'https://sampleswap.org/mp3/artist/5101/Peppy--The-Firing-Squad_YMXB-160.mp3',
+        description: 'Simple drums sample',
+        image: new Image({
+            url: 'https://upload.wikimedia.org/wikipedia/commons/1/13/Juke_joint_drummer.jpg',
+            alt: 'Wikipedia drums'
+        })
+    }));
+
+    conv.ask(new Suggestions(
+        "Who is my favorite hero",
+        "Goodbye"
+    ))
+});
+
+app.intent("Show info about favorite hero", function (conv) {
+    if (conv.surface.capabilities.has('actions.capability.SCREEN_OUTPUT')) {
+        const hero = conv.parameters['hero'];
+        conv.user.storage.hero = hero;
+        showHeroInfo(conv, hero);
+    } else {
+        conv.ask(new NewSurface({
+            capabilities: ["actions.capability.SCREEN_OUTPUT"],
+            context: "This device doesn't have a screen.",
+            notificationTitle: "Caster IO Dialog continuation"
+        }));
+    }
+});
+
+app.intent("New surface", function (conv) {
+    const hero = conv.user.storage.hero;
+    showHeroInfo(conv, hero);
+});
