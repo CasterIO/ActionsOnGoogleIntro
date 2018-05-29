@@ -167,6 +167,11 @@ app.intent("Default Welcome Intent", function (conv) {
     }
 });
 
+app.intent("Clear data", function (conv) {
+    conv.user.storage = {};
+    conv.close("Data has been reset");
+});
+
 app.intent("Play music", function (conv) {
     conv.ask("Here is a music");
     conv.ask(new MediaObject({
@@ -183,6 +188,42 @@ app.intent("Play music", function (conv) {
         "Who is my favorite hero",
         "Goodbye"
     ))
+});
+
+app.intent("Play speech synthesis", function (conv) {
+
+    conv.ask(`<speak>
+        Welcome to the Caster <say-as interpret-as="characters">IO</say-as> Google Assistant course.
+        <break time="1s"/>
+        In this course you are going to learn all you need to get started with Google Assistant
+        <break time="1s"/>
+        From games, simple responses, images and audio, like this one:<break time="1s"/>
+        <audio src="https://jamescoggan.com/assets/assistant/boy.ogg" repeatDur="2.5s">Boy laughing</audio>
+        Or this one:<break time="1s"/>
+        <audio src="https://jamescoggan.com/assets/assistant/dog.ogg" repeatDur="2s">Dog</audio>
+        And also manipulate the assistant's voice:<break time="1s"/>
+        <prosody rate="slow" pitch="-50%">Like this</prosody>
+        <break time="0.5s"/>
+        <prosody rate="fast" pitch="+100%">Or Like this</prosody>
+        <break time="0.5s"/>
+        Or them all together:
+        <break time="0.5s"/>
+        <par>
+            <media begin="1.0s" soundLevel="-5.28dB">
+			    <prosody rate="slow" pitch="-50%">Like this</prosody>
+            </media>
+            <media begin="2.0s" soundLevel="-5.28dB">
+  			    <prosody rate="fast" pitch="+150%">Or Like this</prosody>    
+            </media>  
+  		    <media repeatDur="5s" soundLevel="+2.28dB" fadeInDur="2s" fadeOutDur="0.2s">
+                <audio src="https://jamescoggan.com/assets/assistant/dog.ogg"/>
+            </media>
+            <media repeatDur="5s" soundLevel="+2.28dB" fadeInDur="2s" fadeOutDur="0.2s">
+    		    <audio src="https://jamescoggan.com/assets/assistant/boy.ogg" repeatDur="2.5s">Boy laughing</audio>
+            </media>
+        </par>  
+        I hope you enjoy it! See you on the next lesson!
+        </speak>`);
 });
 
 app.intent("Show info about favorite hero", function (conv) {
